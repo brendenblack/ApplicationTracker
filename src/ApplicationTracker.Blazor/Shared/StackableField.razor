@@ -1,0 +1,11 @@
+﻿<div class="w-100 mb-3 d-flex">
+    <div class="overflow-hidden mr-5" style="width: 30%"><h5>@Title</h5></div>
+    <div class="flex-grow-1">@ChildContent</div>
+</div>
+@code {
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+}

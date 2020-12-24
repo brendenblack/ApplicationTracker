@@ -1,0 +1,44 @@
+﻿@using ApplicationTracker.Core.Features.Applications.Queries.GetApplication
+
+@foreach (var entry in _entries)
+{
+    @if (entry.Type == typeof(NoteDto))
+    {
+        var note = (NoteDto)entry.Value;
+        <ApplicationTracker.Blazor.Pages.Applications.Components.NoteCard Note="note" />
+    }
+    else if (entry.Type == typeof(StatusTransitionDto))
+    {
+        var status = (StatusTransitionDto)entry.Value;
+        <ApplicationTracker.Blazor.Pages.Applications.Components.TransitionCard Transition="status" />
+    }
+}
+
+@code {
+    [Parameter]
+    public ApplicationDto Application { get; set; }
+
+    private List<ChronologicEvent> _entries = new List<ChronologicEvent>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var combined = new List<ChronologicEvent>();
+        var a = Application.Notes?.Select(n => new ChronologicEvent { Timestamp = n.Timestamp, Value = n, Type = typeof(NoteDto) }) ?? new List<ChronologicEvent>();
+        combined.AddRange(a);
+        var b = Application.Transitions?.Select(t => new ChronologicEvent { Timestamp = t.Timestamp, Value = t, Type = typeof(StatusTransitionDto) }) ?? new List<ChronologicEvent>();
+        combined.AddRange(b);
+        _entries = combined.OrderBy(c => c.Timestamp).ToList();
+
+
+        await base.OnParametersSetAsync();
+    }
+
+    public class ChronologicEvent
+    {
+        public DateTime Timestamp { get; set; }
+
+        public object Value { get; set; }
+
+        public Type Type { get; set; }
+    }
+}

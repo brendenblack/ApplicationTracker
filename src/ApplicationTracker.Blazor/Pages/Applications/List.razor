@@ -1,0 +1,55 @@
+﻿@page "/applications"
+@using MediatR;
+@using System.Linq;
+@using ApplicationTracker.Core.Features.Applications.Queries.GetApplications;
+
+@inject IMediator mediator
+
+@if (applications == null)
+{
+    <Loading />
+}
+else
+{
+    <h3>Applications</h3>
+    <a href="applications/edit/0" class="btn btn-primary">Add application</a>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Company</th>
+                <th>Position</th>
+                <th>Date applied</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @*@foreach (var app in applications.Where(a => !a.IsClosed))
+            {
+                <ApplicationListItem Application="@app" />
+            }
+            @foreach (var app in applications.Where(a => a.IsClosed))
+            {
+                <ApplicationListItem Application="@app" />
+            }*@
+        </tbody>
+    </table>
+}
+
+
+@code {
+
+    private List<ApplicationSummaryDto> applications;
+
+    [Parameter]
+    public int JobSearchId { get; set; } = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var query = new GetApplicationsQuery { ParentSearchId = JobSearchId };
+        var vm = await mediator.Send(query);
+
+        applications = vm.Applications;
+    }
+
+
+}

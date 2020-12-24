@@ -1,0 +1,15 @@
+﻿@using ApplicationTracker.Core.Features.Applications.Queries.GetApplications
+
+<tr>
+    <td>@Application.OrganizationName</td>
+    <td>@Application.JobTitle</td
+    <td style="display: flex; justify-content: space-around; align-items: center;">
+        <a href="/applications/@Application.Id"><span class="oi oi-eye"></span></a>
+        <a href="/applications/edit/@Application.Id"><span class="oi oi-pencil"></span></a>
+    </td>
+</tr>
+
+@code {
+    [Parameter]
+    public ApplicationSummaryDto Application { get; set; }
+}

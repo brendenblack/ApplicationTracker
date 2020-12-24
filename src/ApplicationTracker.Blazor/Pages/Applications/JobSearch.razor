@@ -1,0 +1,100 @@
+﻿@page "/search/{searchId:int}"
+@page "/searches/{searchId:int}"
+
+@using ApplicationTracker.Core.Features.Applications.Queries.GetApplications;
+@using ApplicationTracker.Blazor.Pages.Applications.Components;
+@using ApplicationTracker.Core.Features.JobSearches.Queries.GetJobSearch;
+@using System.Linq;
+
+@inject MediatR.IMediator _mediator;
+@inject ApplicationTracker.Core.Persistence.IApplicationDbContext _context;
+@inject IJSRuntime js
+@inject NavigationManager _navigation;
+
+<BSContainer IsFluid="true" Class="m-5">
+    @if (_search != null)
+    {
+        <BSRow>
+            <BSBreadcrumb>
+                <BSBreadcrumbItem><a href="/">Searches</a></BSBreadcrumbItem>
+                <BSBreadcrumbItem IsActive="true">@_search.Title</BSBreadcrumbItem>
+            </BSBreadcrumb>
+        </BSRow>
+        <BSRow>
+            <BSCol>
+                <h1>@_search.Title</h1>
+                <p>@_search.Description</p>
+            </BSCol>
+        </BSRow>
+    }
+
+
+    <BSRow>
+        <BSCol SM="12" MD="4" XL="2">
+            <h5>In Progress</h5>
+            <ul class="list-unstyled">
+                @foreach (var app in _applications.Where(a => a.CurrentStatus <= Core.Domain.ApplicationStatuses.INPROGRESS))
+                {
+                    <li>
+                        <a href="/search/@SearchId/applications/@app.Id">@app.JobTitle</a>
+                        <br />
+                        <small class="text-muted">(@app.Created)</small><br />
+                        <small>Resume? @app.HasResume</small><br />
+                        <small>Cover letter? @app.HasCoverLetter</small><br />
+                        <small>Remote? @app.IsRemote</small>
+                    </li>
+                }
+            </ul>
+        </BSCol>
+        <BSCol SM="12" MD="4" XL="2">
+            <h5>Submitted</h5>
+            <ul class="list-unstyled">
+                @foreach (var app in _applications.Where(a => a.CurrentStatus == Core.Domain.ApplicationStatuses.SUBMITTED))
+                {
+                    <li>
+                        <a href="/search/@SearchId/applications/@app.Id">@app.JobTitle</a>
+                        <br />
+                        <small class="text-muted">(@app.Created)</small><br />
+                        <small>Resume? @app.HasResume</small><br />
+                        <small>Cover letter? @app.HasCoverLetter</small><br />
+                        <small>Remote? @app.IsRemote</small>
+                    </li>
+                }
+            </ul>
+        </BSCol>
+        <BSCol SM="12" MD="4" XL="2">
+            <h5>Closed</h5>
+            <ul class="list-unstyled">
+                @foreach (var app in _applications.Where(a => a.CurrentStatus == Core.Domain.ApplicationStatuses.CLOSED))
+                {
+                    <li>
+                        <a href="/search/@SearchId/applications/@app.Id">@app.JobTitle</a>
+                        <br />
+                        <small class="text-muted">(@app.Created)</small><br />
+                        <small>Resume? @app.HasResume</small><br />
+                        <small>Cover letter? @app.HasCoverLetter</small><br />
+                        <small>Remote? @app.IsRemote</small>
+                    </li>
+                }
+            </ul>
+        </BSCol>
+    </BSRow>
+
+</BSContainer>
+
+@code {
+    [Parameter]
+    public int SearchId { get; set; }
+
+    private JobSearchDto _search;
+    private List<ApplicationSummaryDto> _applications { get; set; } = new List<ApplicationSummaryDto>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _search = await _mediator.Send(new GetJobSearchQuery { Id = SearchId });
+        var applicationsVm = await _mediator.Send(new GetApplicationsQuery { ParentSearchId = SearchId });
+        _applications = applicationsVm.Applications;
+
+        await base.OnParametersSetAsync();
+    }
+}

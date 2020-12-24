@@ -1,0 +1,14 @@
+﻿.root {
+    display: flex;
+    flex-direction: column;
+}
+
+.widgets {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.widget {
+    width: 30%;
+}

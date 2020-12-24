@@ -1,0 +1,15 @@
+﻿.viewmode .pencil {
+    visibility: hidden;
+}
+
+.viewmode:hover {
+    background-color: navajowhite;
+}
+
+.viewmode:hover .pencil {
+    visibility: visible;
+}
+
+::deep p, ul {
+    margin: 0;
+}

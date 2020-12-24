@@ -1,0 +1,42 @@
+﻿.root {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+}
+
+.root h2 {
+    font-size: 14px;
+    font-weight: 600;
+    font-style: normal;
+    letter-spacing: -0.042px;
+    line-height: 24px;
+}
+
+.sidebar {
+    width: 300px;
+}
+
+.content {
+    flex-grow: 1;
+    padding: 1em;
+}
+
+.app-item {
+    cursor: pointer;
+    padding: 0.5em;
+}
+
+.app-item .title {
+    font-size: 1.2em;
+}
+
+.app-item .organization {
+    font-size: 0.8em;
+}
+
+.app-item:hover {
+}
+
+.app-item.selected {
+    /*background-color: lightgrey;*/
+}

@@ -1,0 +1,105 @@
+﻿@using ApplicationTracker.Core.Features.Applications.Commands
+@using ApplicationTracker.Core.Domain
+
+<BSModal @ref="Modal">
+    <BSModalHeader OnClick="@(() => Modal.Hide())">Close application</BSModalHeader>
+    <BSModalBody>
+        <BSBasicForm>
+            <BSContainer IsFluid="true">
+                <BSFormGroup>
+                    <BSRow>
+                        <BSCol XS="3"><BSLabel Class="text-right">Close type</BSLabel></BSCol>
+                        <BSCol>
+                            <BSBasicInput Id="exampleFormControlSelect1" InputType="InputType.Select" @bind-Value="model.ResolutionType">
+                                <option value="@ApplicationResolution.REJECTED">Rejected by employer</option>
+                                <option value="@ApplicationResolution.WITHDRAWN">Withdraw</option>
+                            </BSBasicInput>
+                        </BSCol>
+                    </BSRow>
+                </BSFormGroup>
+
+                <BSFormGroup>
+                    <BSRow>
+                        <BSCol XS="3"><BSLabel Class="text-right">Notes</BSLabel></BSCol>
+                        <BSCol>
+                            <BSBasicInput InputType="InputType.TextArea" Rows="3" @bind-Value="model.Description" />
+                        </BSCol>
+                    </BSRow>
+                </BSFormGroup>
+
+                @if (model.ResolutionType == ApplicationResolution.REJECTED)
+                {
+                    <BSFormGroup>
+                        <BSRow>
+                            <BSCol XS="3"><BSLabel Class="text-right">Employer message</BSLabel></BSCol>
+                            <BSCol>
+                                <BSBasicInput InputType="InputType.TextArea" Rows="3" @bind-Value="model.EmployerNote" />
+                            </BSCol>
+                        </BSRow>
+                    </BSFormGroup>
+                }
+            </BSContainer>
+        </BSBasicForm>
+    </BSModalBody>
+    <BSModalFooter>
+        <BSButton Color="Color.Secondary" @onclick="@(() => Modal.Hide())">Cancel</BSButton>
+        <BSButton Color="Color.Danger" @onclick="handleSubmit" IsActive="!isLoading">
+            Close
+        </BSButton>
+    </BSModalFooter>
+</BSModal>
+
+@code {
+    public BSModal Modal { get; private set; }
+
+    private bool isLoading = false;
+
+    [Parameter]
+    public EventCallback<CloseApplicationCommand> OnSubmit { get; set; }
+
+    private CloseApplicationCommand model;
+
+    public class CloseModel
+    {
+        public DateTime EffectiveTime { get; set; }
+
+        public ApplicationResolution Resolution { get; set; }
+
+        public string Note { get; set; }
+
+        public string EmployerNote { get; set; }
+    }
+
+    private async Task handleSubmit()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        if (model.ResolutionType != ApplicationResolution.REJECTED)
+        {
+            model.EmployerNote = string.Empty;
+        }
+
+        if (OnSubmit.HasDelegate)
+        {
+            await OnSubmit.InvokeAsync(model);
+        }
+
+        isLoading = false;
+        Modal.Hide();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (model == null)
+        {
+            model = new CloseApplicationCommand
+            {
+                ResolutionType = ApplicationResolution.REJECTED,
+                EffectiveTime = DateTime.Now
+            };
+        }
+        base.OnParametersSet();
+    }
+
+}

@@ -1,0 +1,118 @@
+﻿@using ApplicationTracker.Core.Features.Applications.Queries.GetApplication;
+@using ApplicationTracker.Core.Domain;
+@using ApplicationTracker.Core.Common.ValueObjects;
+
+@if (_newLayout)
+{
+    <div class="mb-5 d-flex">
+        <div style="width: 32px;"></div>
+        <div class="flex-grow-1">
+            <div class="d-block mb-2">
+                @if (Note.Author != "self") 
+                {
+                    <strong class="mr-1">@Note.Author</strong>
+                }
+            <span class="text-muted">@Note.Timestamp</span>
+            </div>
+            <div class="d-block mb-2">
+                @Note.Contents
+            </div>
+            <div>
+                <BSButton Color="Color.Link" Class="pl-0">Edit</BSButton>
+                <BSButton Color="Color.Link">Delete</BSButton>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+<div class="note border px-2 py-1 mb-1">
+    <p class="text-muted"><small>@Note.Timestamp</small></p>
+    @if (Note.Author == "self")
+    {
+    @((MarkupString)Note.Contents.Replace("\\n", "<br />"))   
+    }
+    else
+    {
+        <blockquote class="blockquote">
+            <p class="mb-0">
+                @_content
+            </p>
+            <footer class="blockquote-footer">@Note.Author</footer>
+        </blockquote>
+    }
+</div>
+}
+@code {
+    [Parameter]
+    public NoteDto Note { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnDelete { get; set; }
+
+    [Parameter]
+    public EventCallback<NoteDto> OnEditClick { get; set; }
+
+    private bool _newLayout = true;
+
+    private string _icon = "oi-globe";
+    private string _header;
+    private bool _isOpen = true;
+    private string _content;
+    private bool _canDelete = false;
+    EmployerContact _contactModel;
+
+    BSModal confirmDeleteModal { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        _content = RenderNoteContentAsHtml(Note);
+        _contactModel = new EmployerContact(Note.Contents);
+
+        _icon = "oi-comment-square";
+        _header = $"Note added {Note.Created.ToString()}";
+        _canDelete = true;
+
+        //if (Note.NoteType == NoteTypes.COMMENT)
+        //{
+        //    _icon = "oi-comment-square";
+        //    _header = $"Note added {Note.Created.ToString()}";
+        //    _canDelete = true;
+        //}
+        //else if (Note.NoteType == NoteTypes.EMPLOYER_CONTACT)
+        //{
+        //    _icon = "oi-envelope-closed";
+        //    _header = $"Employer contact received on {Note.Timestamp.ToString()}";
+        //    _canDelete = true;
+
+        //}
+
+        base.OnParametersSet();
+    }
+
+    private void HandleCollapseClick()
+    {
+        _isOpen = !_isOpen;
+        StateHasChanged();
+    }
+
+    private string RenderNoteContentAsHtml(NoteDto note)
+    {
+        var content = note.Contents.Replace("\\n", "<br />");
+
+        return content;
+    }
+
+    private async Task HandleDelete()
+    {
+        await OnDelete.InvokeAsync(Note.Id);
+    }
+
+
+
+    private void HandleEditClick()
+    {
+
+    }
+
+}

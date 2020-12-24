@@ -1,0 +1,62 @@
+﻿<BSModal @ref="Modal">
+    <BSModalHeader OnClick="@(() => Modal.Hide())">Hello world</BSModalHeader>
+    <BSModalBody>
+        <BSBasicForm>
+            <BSContainer IsFluid="true">
+                <BSFormGroup>
+                    <BSRow>
+                        <BSCol XS="3"><BSLabel Class="text-right">Person</BSLabel></BSCol>
+                        <BSCol>
+                            @*<BSInput Id="exampleInputEmail1" InputType="InputType.Text" PlaceHolder="Enter email" Value="string.Empty" />*@
+                            @*<BSInput InputType="InputType.Text" @bind-Value="Contact.Person" />*@
+                        </BSCol>
+                    </BSRow>
+                </BSFormGroup>
+            </BSContainer>
+        </BSBasicForm>
+        @*<BSContainer IsFluid="true">
+                <BSRow>
+                    <BSCol XS="3"><BSLabel For="contactPerson" Class="text-right">Person</BSLabel></BSCol>
+                    <BSCol><BSInput id="contactPerson" @bind-Value="Contact.Person" /></BSCol>
+                </BSRow>
+
+                <BSRow>
+                    <BSCol XS="3"><BSLabel For="contactSubject" Class="text-right">Subject</BSLabel></BSCol>
+                    <BSCol><BSInput id="contactSubject" @bind-Value="Contact.Subject" /></BSCol>
+                </BSRow>
+
+                <BSRow>
+                    <BSCol XS="3"><BSLabel For="contactContents" Class="text-right">Contents</BSLabel></BSCol>
+                    <BSCol><BSInput id="contactContents" @bind-Value="Contact.Contents" /></BSCol>
+                </BSRow>
+            </BSContainer>*@
+    </BSModalBody>
+    <BSModalFooter>
+        <BSButton Color="Color.Secondary" @onclick="@(() => Modal.Hide())">Cancel</BSButton>
+        <BSButton Color="Color.Primary" @onclick="handleSaveClick" IsActive="!isLoading">@(isLoading) ? "Save" : <i class="oi oi-clock"></i></BSButton>
+    </BSModalFooter>
+</BSModal>
+@code {
+    private bool isLoading = false;
+
+    [Parameter]
+    public EventCallback<string>
+    OnSave { get; set; }
+
+    public BSModal Modal { get; private set; }
+
+
+    private async Task handleSaveClick()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        if (OnSave.HasDelegate)
+        {
+            //await OnSave.InvokeAsync(_noteContent);
+        }
+
+        Modal.Hide();
+    }
+
+    }

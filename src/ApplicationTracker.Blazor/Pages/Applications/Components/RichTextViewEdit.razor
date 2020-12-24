@@ -1,0 +1,54 @@
+﻿@if (_isEdit)
+{
+    <RichTextEditor @ref="editorRef" Content="@Content" />
+    <div class="d-flex flex-row-reverse">
+        <BSButtonGroup Class="pt-1">
+            <BSButton Color="Color.Primary" Size="Size.Small" @onclick="handleSaveChangesClick">Save changes</BSButton>
+            <BSButton Color="Color.Secondary" Size="Size.Small" @onclick="handleDiscardClick">Discard</BSButton>
+        </BSButtonGroup>
+    </div>
+}
+else
+{
+    <div class="viewmode">
+        <BSButton Size="Size.Small" IsOutline="true" Color="Color.Secondary" @onclick="handleEditClick" Class="float-right pencil"><i class="oi oi-pencil"></i></BSButton>
+        @((MarkupString)Content)
+    </div>
+} 
+
+
+@code {
+    [Parameter]
+    public string Content { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnSave { get; set; }
+
+    private RichTextEditor editorRef;
+
+    private bool _isEdit = false;
+
+    private void handleDiscardClick()
+    {
+        _isEdit = false;
+        StateHasChanged();
+    }
+
+    private void handleEditClick()
+    {
+        _isEdit = true;
+        StateHasChanged();
+    }
+
+    private async Task handleSaveChangesClick()
+    {
+        var description = await editorRef.GetHtmlAsync();
+        
+
+        Content = description;
+        _isEdit = false;
+        StateHasChanged();
+
+        await OnSave.InvokeAsync(description);
+    }
+}

@@ -1,0 +1,29 @@
+﻿@using ApplicationTracker.Core.Features.Applications.Queries.GetApplication;
+
+@inject MediatR.IMediator _mediator
+
+ 
+<BSButtonGroup>
+    <BSButton ButtonType="ButtonType.Button" Color="Color.Secondary" @onclick="@HandlePhoneInterviewClick"><span class="oi oi-phone" /></BSButton>
+    <BSButton ButtonType="ButtonType.Button" Color="Color.Secondary"><span class="oi oi-people" /></BSButton>
+    <BSButton ButtonType="ButtonType.Button" Color="Color.Secondary"><span class="oi oi-video" /></BSButton>
+</BSButtonGroup>
+
+<BSButtonGroup>
+    <BSButton ButtonType="ButtonType.Button" Color="Color.Secondary">Interview</BSButton>
+    <BSButton ButtonType="ButtonType.Button" Color="Color.Danger">Close</BSButton>
+</BSButtonGroup>
+
+@code {
+    [Parameter]
+    public ApplicationDto Application { get; set; }
+
+    protected void HandlePhoneInterviewClick()
+    {
+
+    }
+
+
+
+
+}

@@ -1,0 +1,47 @@
+﻿<BSModal @ref="Modal" Size="Size.Large">
+    <BSModalHeader OnClick="@(() => Modal.Hide())">Add a note</BSModalHeader>
+    <BSModalBody>
+        <BSRow>
+            <BSCol XS="3">
+                <BSLabel For="noteContent">Note</BSLabel>
+            </BSCol>
+            <BSCol>
+                <BSBasicInput InputType="InputType.TextArea" Name="noteContent" Rows="5" @bind-Value="_noteContent" />
+            </BSCol>
+        </BSRow>
+    </BSModalBody>
+    <BSModalFooter>
+        <BSButton Color="Color.Secondary" @onclick="@(() => Modal.Hide())">Close</BSButton>
+        <BSButton Color="Color.Primary" @onclick="handleSaveClick">Save note</BSButton>
+    </BSModalFooter>
+</BSModal>
+
+@code {
+    [Parameter]
+    public EventCallback<string> OnSave { get; set; }
+
+    public BSModal Modal { get; private set; }
+
+    private string _noteContent = "";
+
+    private async Task handleSaveClick()
+    {
+        if (OnSave.HasDelegate)
+        {
+            await OnSave.InvokeAsync(_noteContent);
+        }
+
+        Modal.Hide();
+    }
+
+    //public void Show()
+    //{
+    //    modal.Show();
+    //}
+
+    //public void Hide()
+    //{
+    //    modal.Hide();
+    //}
+
+}

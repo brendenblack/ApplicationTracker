@@ -1,0 +1,71 @@
+﻿@using ApplicationTracker.Core.Features.Applications.Commands
+@using ApplicationTracker.Core.Features.JobSearches.Queries.GetJobSearches
+
+@inject MediatR.IMediator _mediator
+
+<EditForm Model="model" OnValidSubmit="@handleValidSubmit">
+    <DataAnnotationsValidator />
+    <BSFormGroup>
+        <BSLabel For="searchId">Job search</BSLabel>
+        <BSInput Id="searchId" InputType="InputType.Select" @bind-Value="model.ParentSearchId">
+            @foreach (var search in _searches)
+            {
+                <option value="@search.Id">@search.Title</option>
+            }
+        </BSInput>
+        <BSFormFeedback For="@(() => model.ParentSearchId)" />
+    </BSFormGroup>
+
+    <BSFormGroup>
+        <BSLabel For="organizationName">Organization</BSLabel>
+        <BSInput Id="organizationName" InputType="InputType.Text" @bind-Value="model.OrganizationName" />
+        <BSFormFeedback For="@(() => model.OrganizationName)" />
+    </BSFormGroup>
+
+    <BSFormGroup>
+        <BSLabel for="positionTitle">Position title</BSLabel>
+        <BSInput InputType="InputType.Text" id="positionTitle" @bind-Value="model.JobTitle" />
+        <BSFormFeedback For="@(() => model.JobTitle)" />
+    </BSFormGroup>
+
+    <BSFormGroup>
+        <BSLabel for="positionDescription">Position description</BSLabel>
+        <RichTextEditor @ref="editor" Content="@model.Description" />
+    </BSFormGroup>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int? ParentSearchId { get; set; }
+
+    private List<JobSearchSummaryDto> _searches = new();
+
+    public CreateApplicationCommand model = new CreateApplicationCommand();
+
+    public async Task<CreateApplicationCommand> GetModel()
+    {
+        var result = model;
+        result.Description = await editor.GetHtmlAsync();
+        return result;
+    }
+
+    private RichTextEditor editor;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var response = await _mediator.Send(new GetJobSearchesQuery());
+        _searches = response.Searches;
+
+        if (ParentSearchId.HasValue)
+        {
+            model.ParentSearchId = ParentSearchId.Value;
+        }
+
+        await base.OnParametersSetAsync();
+    }
+
+    private void handleValidSubmit()
+    {
+
+    }
+}

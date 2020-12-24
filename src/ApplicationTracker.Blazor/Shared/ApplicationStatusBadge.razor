@@ -1,0 +1,36 @@
+﻿@using Core.Domain;
+@using ApplicationTracker.Core.Features.Applications.Queries.GetApplication;
+ 
+<BSBadge Color="@badgeColour">@label</BSBadge>
+
+@code {
+    [Parameter]
+    public ApplicationDto Application { get; set; }
+
+    private Color badgeColour = Color.Danger;
+    private string label = "Unknown";
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (Application != null)
+        {
+            switch (Application.CurrentStatus)
+            {
+                case ApplicationStatuses.INPROGRESS:
+                    badgeColour = Color.Info;
+                    label = "In progress";
+                    break;
+                case ApplicationStatuses.SUBMITTED:
+                    badgeColour = Color.Primary;
+                    label = "Submitted";
+                    break;
+                case ApplicationStatuses.CLOSED:
+                    badgeColour = Color.Secondary;
+                    label = "Closed";
+                    break;
+            }
+
+            StateHasChanged();
+        }
+    }
+}

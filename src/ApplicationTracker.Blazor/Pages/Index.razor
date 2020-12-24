@@ -1,0 +1,48 @@
+﻿@page "/"
+@page "/index"
+@page "/searches" 
+
+@using MediatR;
+@using ApplicationTracker.Core.Features.JobSearches.Queries.GetJobSearches;
+
+@inject IMediator _mediator;
+
+    <main class="p-5">
+        <h1 class="mb-5">Job Searches</h1>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Created</th>
+                    <th>Status</th>
+                    <th class="text-right">Applications</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var search in _searches)
+                {
+                    <tr>
+                        <td><a href="@($"/searches/{search.Id}")">@search.Title</a></td>
+                        <td>@search.Created</td>
+                        <td><em>In progress</em></td>
+                        <td class="text-right">@search.ApplicationsCount</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </main>
+
+@code {      
+
+    private List<JobSearchSummaryDto> _searches = new List<JobSearchSummaryDto>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var vm = await _mediator.Send(new GetJobSearchesQuery());
+        _searches = vm.Searches;
+        StateHasChanged();
+        await base.OnAfterRenderAsync(firstRender);
+    }
+}
+

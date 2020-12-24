@@ -1,0 +1,48 @@
+﻿@using Core.Domain
+@using ApplicationTracker.Core.Features.Applications.Queries.GetApplication
+
+@inject ApplicationTracker.Core.Persistence.IApplicationDbContext _context
+@inject ILogger<ApplicationStatusControls> _logger
+
+@if (Application != null)
+{
+    <BSButtonGroup Size="Size.Small">
+        @if (Application.CurrentStatus == ApplicationStatuses.CLOSED)
+        {
+            <BSButton Color="@_defaultColour" OnClick="@(() =>  handleClick(TransitionAction.REOPEN))">Re-open</BSButton>
+        }
+        else if (Application.CurrentStatus == ApplicationStatuses.INPROGRESS)
+        {
+            <BSButton Color="Color.Primary" OnClick="@(() => handleClick(TransitionAction.SUBMIT))">Submit</BSButton>
+            <BSButton Color="@_defaultColour" OnClick="@(() =>  handleClick(TransitionAction.CANCEL))">Cancel</BSButton>
+        }
+        else if (Application.CurrentStatus == ApplicationStatuses.SUBMITTED)
+        {
+            <BSButton Color="@_defaultColour" OnClick="@(() =>  handleClick(TransitionAction.CLOSE))">Close</BSButton>
+            @*<BSButton Color="@_defaultColour" OnClick="@(() => OnTransitionClick.InvokeAsync(TransitionAction.WITHDRAW))">Withdraw</BSButton>
+                <BSButton Color="Color.Danger" OnClick="@(() => OnTransitionClick.InvokeAsync(TransitionAction.REJECTED))">Rejected</BSButton>*@
+        }
+    </BSButtonGroup>
+}
+
+@code {
+    /*
+    * TODO: this control is too tightly coupled, and relies on intimate knowledge of the workflow. Somehow
+    * we should be constructing this control dynamically by discovering the domain.
+    */
+
+    private Color _defaultColour = Color.Secondary;
+
+    [Parameter]
+    public ApplicationDto Application { get; set; }
+
+    [Parameter]
+    public EventCallback<TransitionAction> OnTransitionClick { get; set; }
+
+    private async Task handleClick(TransitionAction action)
+    {
+        _logger.LogDebug($"Status transition click event: {action}");
+        await OnTransitionClick.InvokeAsync(action);
+    }
+
+}

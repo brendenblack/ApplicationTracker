@@ -1,0 +1,47 @@
+﻿@using Core.Domain;
+@using ApplicationTracker.Core.Features.Applications.Queries.GetApplication;
+
+@if (Application.Resolution != ApplicationResolution.UNRESOLVED)
+{
+<BSBadge Color="@badgeColour">@label</BSBadge>
+}
+
+@code {
+    [Parameter]
+    public ApplicationDto Application { get; set; }
+
+    private Color badgeColour = Color.Danger;
+    private string label = "Unknown";
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (Application != null)
+        {
+            switch (Application.Resolution)
+            {
+                case ApplicationResolution.WITHDRAWN:
+                    badgeColour = Color.Light;
+                    label = "Withdrawn";
+                    break;
+                case ApplicationResolution.REJECTED:
+                    badgeColour = Color.Danger;
+                    label = "Rejected";
+                    break;
+                case ApplicationResolution.OFFER_ACCEPTED:
+                    badgeColour = Color.Success;
+                    label = "Offer accepted";
+                    break;
+                case ApplicationResolution.OFFER_DECLINED:
+                    badgeColour = Color.Light;
+                    label = "Offer declined";
+                    break;
+                case ApplicationResolution.CANCELLED:
+                    badgeColour = Color.Light;
+                    label = "Cancelled";
+                break;
+            }
+
+            StateHasChanged();
+        }
+    }
+}

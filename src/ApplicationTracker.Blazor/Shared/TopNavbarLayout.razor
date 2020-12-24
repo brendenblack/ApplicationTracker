@@ -1,0 +1,116 @@
+﻿@inherits LayoutComponentBase
+
+@using ApplicationTracker.Core.Features.Applications.Queries.GetApplication
+@using ApplicationTracker.Core.Features.JobSearches.Queries.GetJobSearches 
+
+@inject ApplicationTracker.Core.Persistence.IApplicationDbContext _context
+@inject MediatR.IMediator _mediator;
+@inject BlazorStrap.IBootstrapCss BootstrapCss
+@inject NavigationManager _navigation
+
+<BSNavbar IsExpand="true" IsDark="false" Color="Color.Light">
+    <BSNavbarBrand href="/searches">LinkedOut</BSNavbarBrand>
+
+    <BSNavbarToggler @onclick="onclick" />
+
+    <BSCollapse IsOpen="@isOpen" IsNavbar="true" IsOpenChanged="OpenChanged">
+        <BSNav IsList="true" Class="mr-auto" IsNavbar="true">
+            <BSNavItem IsDropdown="true">
+                <BSDropdownToggle Color="Color.Light">Searches</BSDropdownToggle>
+                <BSDropdownMenu>
+                    @foreach (var search in _searches)
+                    {
+                        <BSDropdownItem Href="@($"/search/{search.Id}")">@search.Title</BSDropdownItem>
+                    }
+                    <BSDropdownItem IsDivider="true" />
+                    <BSDropdownItem Href="/searches">View all searches</BSDropdownItem>
+                    <BSDropdownItem Href="/searches">Create a search</BSDropdownItem>
+                </BSDropdownMenu>
+            </BSNavItem>
+            <BSNavItem Class="ml-5">
+                <BSButton Color="Color.Primary" OnClick="@(() => addApplicationModal.Show())">Create</BSButton>
+            </BSNavItem>
+        </BSNav>
+    </BSCollapse>
+</BSNavbar>
+<div class="main">
+    @Body
+</div>
+
+<BSModal @ref="addApplicationModal" Size="Size.Large">
+    <BSModalHeader OnClick="@(() => addApplicationModal.Hide())">Create an application</BSModalHeader>
+    <BSModalBody Class="overflow-auto">
+        <CreateApplicationForm @ref="@createApplicationForm" ParentSearchId="@parentSearchId" />
+    </BSModalBody>
+    <BSModalFooter>
+        <BSButton Color="Color.Secondary" @onclick="@(() => addApplicationModal.Hide())">Cancel</BSButton>
+        <BSButton Color="Color.Primary" @onclick="@handleCreateClick">Create</BSButton>
+    </BSModalFooter>
+</BSModal>
+
+<BSToast IsVisible="@(createdApplication != null)">
+    <BSToastHeader>Application created successfully</BSToastHeader>
+    <BSToastBody>
+        Application for <a href="/search/@createdApplication?.ParentSearchId/applications/@createdApplication?.Id">@createdApplication?.JobTitle</a> created successfully.
+    </BSToastBody>
+</BSToast>
+
+<BlazoredToasts Position="ToastPosition.BottomRight"
+                Timeout="10"
+                IconType="IconType.FontAwesome"
+                SuccessIcon="fa fa-thumbs-up"
+                RemoveToastsOnNavigation="true" />
+
+@code {
+
+    private BSModal addApplicationModal;
+
+    private int? parentSearchId = 1;
+    CreateApplicationForm createApplicationForm;
+    private ApplicationDto createdApplication = null;
+    private List<JobSearchSummaryDto> _searches = new List<JobSearchSummaryDto>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await BootstrapCss.SetBootstrapCss(Theme.Bootstrap, "4.3.1");
+
+            var searches = await _mediator.Send(new GetJobSearchesQuery { Limit = 10 });
+            _searches = searches.Searches;
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    void onclick(MouseEventArgs e)
+    {
+        isOpen = !isOpen;
+        StateHasChanged();
+    }
+
+    bool isOpen { get; set; } = true;
+    void OpenChanged(bool e)
+    {
+        isOpen = e;
+        StateHasChanged();
+    }
+
+    private async Task handleCreateClick()
+    {
+
+        // get the model from the form
+        var command = await createApplicationForm.GetModel();
+        // send the command to create the record
+        var createResult = await _mediator.Send(command);
+        if (createResult.IsSuccess)
+        {
+            // grab details to show a toast
+            createdApplication = await _mediator.Send(new GetApplicationQuery { Id = createResult.Value });
+            StateHasChanged();
+        }
+
+        // hide the dialog, maybe should only hide on success?
+        addApplicationModal.Hide();
+    }
+}

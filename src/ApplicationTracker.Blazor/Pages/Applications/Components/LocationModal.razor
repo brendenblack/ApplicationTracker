@@ -1,0 +1,39 @@
+﻿@using ApplicationTracker.Core.Common.ValueObjects
+<BSModal>
+    <BSModalHeader>Location</BSModalHeader>
+    <BSModalBody>
+        <BSForm>
+            <BSFormGroup>
+                <BSLabel For="exampleInputEmail1">Email address</BSLabel>
+                <BSInput Id="exampleInputEmail1" InputType="InputType.Text" @bind-Value="City" />
+            </BSFormGroup>
+
+            <BSFormGroup>
+                <BSLabel For="exampleFormControlSelect1">Example select</BSLabel>
+                <BSBasicInput Id="exampleFormControlSelect1" InputType="InputType.Select" @bind-Value="Province">
+                    @foreach (var province in Location.PROVINCES)
+                    {
+                        <option value="remote">Remote</option>
+                        <option value="province">@province</option>
+                    }
+                </BSBasicInput>
+            </BSFormGroup>
+        </BSForm>
+    </BSModalBody>
+</BSModal>
+
+
+@code {      
+
+    [Parameter]
+    public string City { get; set; }
+
+    [Parameter]
+    public string Province { get; set; }
+
+    protected override Task OnParametersSetAsync()
+    {
+
+        return base.OnParametersSetAsync();
+    }
+}

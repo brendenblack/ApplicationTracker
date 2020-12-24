@@ -1,0 +1,55 @@
+﻿@using Blazored.TextEditor;
+
+<BlazoredTextEditor @ref="@QuillHtml">
+    <ToolbarContent>
+        <!-- Add font size dropdown -->
+        <select class="ql-font">
+            <option value="roboto">Roboto</option>
+            <option value="montserrat">Montserrat</option>
+            <option value="tangerine">Tangerine</option>
+        </select>
+        <select class="ql-size">
+            <option value="small"></option>
+            <!-- Note a missing, thus falsy value, is used to reset to default -->
+            <option selected></option>
+            <option value="large"></option>
+            <option value="huge"></option>
+        </select>
+        <select class="ql-header">
+            <option selected=""></option>
+            <option value="1"></option>
+            <option value="2"></option>
+            <option value="3"></option>
+            <option value="4"></option>
+            <option value="5"></option>
+        </select>
+        <span class="ql-formats">
+            <button class="ql-bold"></button>
+            <button class="ql-italic"></button>
+            <button class="ql-underline"></button>
+            <button class="ql-strike"></button>
+        </span>
+        <span class="ql-formats">
+            <select class="ql-color"></select>
+            <select class="ql-background"></select>
+        </span>
+        <span class="ql-formats">
+            <button class="ql-list" value="ordered"></button>
+            <button class="ql-list" value="bullet"></button>
+        </span>
+        <span class="ql-formats">
+            <button class="ql-link"></button>
+        </span>
+    </ToolbarContent>
+    <EditorContent>
+        @((MarkupString)Content)
+    </EditorContent>
+</BlazoredTextEditor>
+
+@code {
+
+    private BlazoredTextEditor QuillHtml;
+
+    [Parameter]
+    public string Content { get; set; }
+}

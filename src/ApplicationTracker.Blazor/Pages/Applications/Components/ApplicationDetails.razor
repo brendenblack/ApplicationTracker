@@ -1,0 +1,305 @@
+﻿@using ApplicationTracker.Core.Features.Applications.Queries.GetApplication
+@using ApplicationTracker.Core.Common.ValueObjects
+@using ApplicationTracker.Core.Features.Applications.Commands
+@using Microsoft.EntityFrameworkCore
+@using ApplicationTracker.Core.Domain
+
+@inject MediatR.IMediator _mediator
+@inject ApplicationTracker.Core.Persistence.IApplicationDbContext _context
+@inject IJSRuntime js
+@inject IToastService toastService 
+@inject ILogger<ApplicationDetails> _logger 
+
+@if (Application != null)
+{
+    <div class="root">
+        <div class="header">
+            <a href="/search/@Application.ParentSearchId">@Application.ParentSearchTitle</a> / @Application.OrganizationName
+            <h2>@Application.JobTitle</h2>
+        </div>
+
+        <div class="controls">
+            @*<BSButton Color="Color.Light"><span class="oi oi-pencil" OnClick="@(() => editModal.Modal.Show())"></span> Edit</BSButton>*@
+
+            <BSButtonGroup Size="Size.Small">
+                <BSButton Color="Color.Light" OnClick="@(() => commentModal.Modal.Show())"><span class="oi oi-comment-square"></span> Note</BSButton>
+            </BSButtonGroup>
+
+            <ApplicationStatusControls Application="Application"
+                                       OnTransitionClick="handleTransitionClick" />
+        </div>
+
+        <BSContainer IsFluid="true" Class="p-0">
+            <BSRow>
+                <BSCol MD="8" XL="9">
+                    <DetailSection Title="Details">
+                        <BSRow>
+                            <BSCol MD="12" LG="6">
+                                <BSRow>
+                                    <BSCol SM="4"><span class="text-muted">Organization:</span></BSCol>
+                                    <BSCol>@Application.OrganizationName</BSCol>
+                                </BSRow>
+                            </BSCol>
+
+                            <BSCol MD="12" LG="6">
+                                <BSRow>
+                                    <BSCol SM="4"><span class="text-muted">Location:</span></BSCol>
+                                    <BSCol><span class="text-muted"><em>@((Application.LocationCityName == "Remote" ) ? "Remote" : $"{Application.LocationCityName}, {Application.LocationProvince}")</em></span></BSCol>
+                                </BSRow>
+                            </BSCol>
+
+                            <BSCol MD="12" LG="6">
+                                <BSRow>
+                                    <BSCol SM="4"><span class="text-muted">Status:</span></BSCol>
+                                    <BSCol><ApplicationStatusBadge Application="Application" /></BSCol>
+                                </BSRow>
+                            </BSCol>
+
+                            <BSCol MD="12" LG="6">
+                                <BSRow>
+                                    <BSCol SM="4"><span class="text-muted">Resolution:</span></BSCol>
+                                    <BSCol><ApplicationResolutionBadge Application="Application" /></BSCol>
+                                </BSRow>
+                            </BSCol>
+
+                            <BSCol MD="12" LG="6">
+                                <BSRow>
+                                    <BSCol SM="4"><span class="text-muted">Labels:</span></BSCol>
+                                    <BSCol></BSCol>
+                                </BSRow>
+                            </BSCol>
+                        </BSRow>
+                    </DetailSection>
+
+                    <BSRow>
+                        <BSCol SM="12" XL="6">
+                            <DetailSection Title="Description">
+                                <RichTextViewEdit Content="@Application.JobDescription" OnSave="@handleDescriptionEdit" />
+                            </DetailSection>
+                        </BSCol>
+                        <BSCol SM="12" XL="6">
+                            <BSRow>
+                                <BSCol SM="12">
+                                    <DetailSection Title="Resumé" IsOpen="false">
+                                        <RichTextViewEdit Content="@Application.Resume" OnSave="@handleResumeEdit" />
+                                    </DetailSection>
+                                </BSCol>
+                                <BSCol SM="12">
+                                    <DetailSection Title="Cover letter" IsOpen="false">
+                                        <RichTextViewEdit Content="@Application.CoverLetter" OnSave="@handleCoverLetterEdit" />
+                                    </DetailSection>
+                                </BSCol>
+                            </BSRow>
+                        </BSCol>
+                    </BSRow>
+                    
+                    @*<DetailSection Title="Description">
+                        <RichTextViewEdit Content="@Application.JobDescription" OnSave="@handleDescriptionEdit" />
+                    </DetailSection>
+
+                    <DetailSection Title="Resumé" IsOpen="false">
+                        <RichTextViewEdit Content="@Application.Resume" OnSave="@handleResumeEdit" />
+                    </DetailSection>
+
+                    <DetailSection Title="Cover letter" IsOpen="false">
+                        <RichTextViewEdit Content="@Application.CoverLetter" OnSave="@handleCoverLetterEdit" />
+                    </DetailSection>*@
+
+
+                    <DetailSection Title="Activity">
+                        <BSTabGroup>
+                            <BSTabList>
+                                <BSTab>
+                                    <BSTabLabel>All</BSTabLabel>
+                                    <BSTabContent>
+                                        <ActivityFlow Application="Application" />
+                                    </BSTabContent>
+                                </BSTab>
+                                <BSTab>
+                                    <BSTabLabel>Notes</BSTabLabel>
+                                    <BSTabContent>
+                                        @foreach (var note in Application.Notes)
+                                        {
+                                            <ApplicationTracker.Blazor.Pages.Applications.Components.NoteCard Note="note" />
+                                        }
+                                    </BSTabContent>
+                                </BSTab>
+                                <BSTab>
+                                    <BSTabLabel>History</BSTabLabel>
+                                    <BSTabContent>
+                                        @foreach (var transition in Application.Transitions)
+                                        {
+                                        <ApplicationTracker.Blazor.Pages.Applications.Components.TransitionCard Transition="transition" />
+                                        }
+                                    </BSTabContent>
+                                </BSTab>
+                            </BSTabList>
+                            <BSTabSelectedContent />
+                        </BSTabGroup>
+                    </DetailSection>
+                </BSCol>
+
+                <BSCol MD="4" XL="3">
+                    <DetailSection Title="Dates">
+                        <BSRow>
+                            <BSCol XS="4">Created:</BSCol>
+                            <BSCol><span id="createdOn">@Application.Created.ToShortDateString()</span></BSCol>
+                            <BSTooltip Target="createdOn" Placement="Placement.Top">@Application.Created.ToLongTimeString()</BSTooltip>
+                        </BSRow>
+
+                        <BSRow>
+                            <BSCol XS="4">Updated:</BSCol>
+                            <BSCol><span id="updatedOn">@(Application.LastModified?.ToShortDateString() ?? Application.Created.ToShortDateString())</span></BSCol>
+                            <BSTooltip Target="updatedOn">@(Application.LastModified?.ToLongTimeString() ?? Application.Created.ToLongTimeString())</BSTooltip>
+
+                        </BSRow>
+                    </DetailSection>
+                </BSCol>
+            </BSRow>
+        </BSContainer>
+    </div>
+
+    <!-- modals -->
+    <CommentModal @ref="commentModal" OnSave="handleSaveNote" />
+    <ContactModal @ref="contactModal" OnSubmit="handleContactSubmit" />
+    <SubmitApplicationModal @ref="submitModal" Application="Application" OnSubmit="handleSubmit" />
+    <CloseApplicationModal @ref="rejectModal" OnSubmit="handleRejectSubmit" />
+}
+else
+{
+    <p>No application here!</p>
+}
+
+@code {
+    [Parameter]
+    public ApplicationDto Application { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnApplicationUpdate { get; set; }
+
+    #region modals
+    SubmitApplicationModal submitModal;
+    private async Task handleSubmit(SubmitApplicationCommand command)
+    {
+
+        var result = await _mediator.Send(command);
+        if (result.IsSuccess)
+        {
+            toastService.ShowSuccess(command.SubmittedOn.ToShortDateString(), "Application has been submitted.");
+            await OnApplicationUpdate.InvokeAsync(result.Value);
+        }
+    }
+
+    CommentModal commentModal;
+    private async Task handleSaveNote(string content)
+    {
+        var app = await _context.Applications.FindAsync(Application.Id);
+        //app.AddNote(content);
+        await _context.SaveChangesAsync(new System.Threading.CancellationToken());
+
+        await OnApplicationUpdate.InvokeAsync(app.Id);
+    }
+
+    ContactModal contactModal;
+    private async Task handleContactSubmit(EmployerContact contact)
+    {
+
+    }
+
+    CloseApplicationModal rejectModal;
+    private async Task handleRejectSubmit(CloseApplicationCommand command)
+    {
+        command.ApplicationId = Application.Id;
+        var result = await _mediator.Send(command);
+        if (result.IsSuccess)
+        {
+            toastService.ShowSuccess("Application has been closed successfully.");
+            await OnApplicationUpdate.InvokeAsync(Application.Id);
+        }
+        else
+        {
+            toastService.ShowError(result.Errors[0].Message);
+        }
+    }
+    #endregion
+
+    /// <summary>
+    /// Allows for the routing of clicks eminating from the <see cref="ApplicationStatusControls"/> component.
+    /// </summary>
+    /// <param name="action"></param>
+    private async Task handleTransitionClick(TransitionAction action)
+    {
+
+        _logger.LogDebug("Handling click to transition to " + action.ToString());
+
+        var application = await _context.Applications
+            .Where(a => a.Id == Application.Id)
+            .Include(a => a.Transitions)
+            .FirstAsync();
+
+        var transitionManager = new TransitionManager(application);
+
+        switch (action)
+        {
+            case TransitionAction.SUBMIT:
+                transitionManager.Submit(DateTime.Now);
+                break;
+            case TransitionAction.CANCEL:
+                //rejectModal.Modal.Show();
+                transitionManager.Close(ApplicationResolution.CANCELLED);
+                break;
+            case TransitionAction.CLOSE:
+                rejectModal.Modal.Show();
+                break;
+            case TransitionAction.REOPEN:
+                transitionManager.Reopen();
+                break;
+        }
+
+        if (transitionManager.HasTransitioned)
+        {
+            await _context.SaveChangesAsync(new System.Threading.CancellationToken());
+            _logger.LogDebug("Saving changes");
+            await OnApplicationUpdate.InvokeAsync(Application.Id);
+        }
+    }
+
+    private async Task handleResumeEdit(string updatedContents)
+    {
+        Application.Resume = updatedContents;
+        var application = await _context.Applications.FindAsync(Application.Id);
+        if (application != null)
+        {
+
+            application.Resume = updatedContents;
+            await _context.SaveChangesAsync(new System.Threading.CancellationToken());
+        }
+    }
+
+    private async Task handleRejection(string reason)
+    {
+
+    }
+
+    private async Task handleDescriptionEdit(string updatedContents)
+    {
+        Application.JobDescription = updatedContents;
+        var application = await _context.Applications.FindAsync(Application.Id);
+        if (application != null)
+        {
+            application.JobDescription = updatedContents;
+            await _context.SaveChangesAsync(new System.Threading.CancellationToken());
+        }
+    }
+
+    private async Task handleCoverLetterEdit(string updatedContents)
+    {
+        Application.CoverLetter = updatedContents;
+        var application = await _context.Applications.FindAsync(Application.Id);
+        if (application != null)
+        {
+            application.CoverLetter = updatedContents;
+            await _context.SaveChangesAsync(new System.Threading.CancellationToken());
+        }
+    }
+}

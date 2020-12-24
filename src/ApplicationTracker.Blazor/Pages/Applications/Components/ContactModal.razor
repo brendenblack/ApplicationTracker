@@ -1,0 +1,69 @@
+﻿@using ApplicationTracker.Core.Common.ValueObjects;
+
+@if (Contact != null)
+{
+    <BSModal @ref="Modal">
+        <BSModalHeader OnClick="@(() => Modal.Hide())">Hello world</BSModalHeader>
+        <BSModalBody>
+            <BSBasicForm>
+                <BSContainer IsFluid="true">
+                    <BSFormGroup>
+                        <BSRow>
+                            <BSCol XS="3"><BSLabel Class="text-right">Person</BSLabel></BSCol>
+                            <BSCol>
+                                @*<BSInput Id="exampleInputEmail1" InputType="InputType.Text" PlaceHolder="Enter email" Value="string.Empty" />*@
+                                @*<BSInput InputType="InputType.Text" @bind-Value="Contact.Person" />*@
+                            </BSCol>
+                        </BSRow>
+                    </BSFormGroup>
+                </BSContainer>
+            </BSBasicForm>
+            @*<BSContainer IsFluid="true">
+                    <BSRow>
+                        <BSCol XS="3"><BSLabel For="contactPerson" Class="text-right">Person</BSLabel></BSCol>
+                        <BSCol><BSInput id="contactPerson" @bind-Value="Contact.Person" /></BSCol>
+                    </BSRow>
+
+                    <BSRow>
+                        <BSCol XS="3"><BSLabel For="contactSubject" Class="text-right">Subject</BSLabel></BSCol>
+                        <BSCol><BSInput id="contactSubject" @bind-Value="Contact.Subject" /></BSCol>
+                    </BSRow>
+
+                    <BSRow>
+                        <BSCol XS="3"><BSLabel For="contactContents" Class="text-right">Contents</BSLabel></BSCol>
+                        <BSCol><BSInput id="contactContents" @bind-Value="Contact.Contents" /></BSCol>
+                    </BSRow>
+                </BSContainer>*@
+        </BSModalBody>
+        <BSModalFooter>
+            <BSButton Color="Color.Secondary" @onclick="@(() => Modal.Hide())">Cancel</BSButton>
+            <BSButton Color="Color.Primary" @onclick="HandleSave" IsActive="!isLoading">@(isLoading) ? "Save" : <i class="oi oi-clock"></i></BSButton>
+        </BSModalFooter>
+    </BSModal>
+}
+
+@code {
+    [Parameter]
+    public EventCallback<EmployerContact> OnSubmit { get; set; }
+
+    private bool isLoading = false;
+
+    public BSModal Modal { get; private set; }
+
+    [Parameter]
+    public EmployerContact Contact { get; set; } = new EmployerContact();
+
+    private async Task HandleSave()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        if (OnSubmit.HasDelegate)
+        {
+            await OnSubmit.InvokeAsync(Contact);
+        }
+
+        isLoading = false;
+        Modal.Hide();
+    }
+}

@@ -1,0 +1,25 @@
+﻿.editor-container {
+    font-family: 'Roboto';
+    font-size: 16px;
+}
+
+/*.ql-font-roboto { font-family: "Roboto"; }*/
+.ql-font-montserrat {
+    font-family: "Montserrat";
+}
+
+.ql-font-tangerine {
+    font-family: "Tangerine";
+}
+
+.ql-toolbar .ql-font span[data-label="roboto"]::before {
+    font-family: "Roboto";
+}
+
+.ql-toolbar .ql-font span[data-label="Montserrat"]::before {
+    font-family: "Montserrat";
+}
+
+.ql-toolbar .ql-font span[data-label="Tangerine"]::before {
+    font-family: "Tangerine";
+}

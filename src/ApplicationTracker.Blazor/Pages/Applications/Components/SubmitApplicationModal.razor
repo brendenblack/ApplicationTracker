@@ -1,0 +1,84 @@
+﻿@using ApplicationTracker.Core.Features.Applications.Queries.GetApplication;
+@using ApplicationTracker.Core.Features.Applications.Commands;
+
+@inject MediatR.IMediator _mediator;
+
+@if (Application != null)
+{
+    <BSModal @ref="modal" Size="Size.Large">
+        <BSModalHeader OnClick="@(() => modal.Hide())">Submit application</BSModalHeader>
+        <BSModalBody>
+            @*<EditForm Model="command">
+                <BSFormGroup>
+                    <BSLabel for="submittedOn">Submission date</BSLabel>
+                    <InputDate id="submittedOn" @bind-Value="command.SubmittedOn" class="form-control" />
+                </BSFormGroup>
+
+                <BSFormGroup>
+                    <BSLabel for="resume">Resumé</BSLabel>
+                    <RichTextEditor @ref="resumeEditor" Content="@Application.Resume" />
+                </BSFormGroup>
+
+                <BSFormGroup>
+                    <BSLabel for="coverLetter">Cover letter</BSLabel>
+                    <RichTextEditor @ref="coverLetterEditor" Content="@Application.CoverLetter" />
+                </BSFormGroup>
+            </EditForm>*@
+            Are you sure you want to submit this application?
+        </BSModalBody>
+        <BSModalFooter>
+            <BSButton Color="Color.Secondary" @onclick="@(() => modal.Hide())">Cancel</BSButton>
+            <BSButton Color="Color.Primary" @onclick="@HandleSubmitClick">Submit</BSButton>
+        </BSModalFooter>
+    </BSModal>
+}
+
+@code {
+    [Parameter]
+    public ApplicationDto Application { get; set; }
+
+    [Parameter]
+    public EventCallback<SubmitApplicationCommand> OnSubmit { get; set; }
+
+    private SubmitApplicationCommand command = new();
+
+    private string clickStatus = "Unclicked";
+
+    protected override void OnParametersSet()
+    {
+        command = new();
+        command.SubmittedOn = DateTime.Now;
+
+        base.OnParametersSet();
+    }
+
+    BSModal modal;
+    RichTextEditor resumeEditor;
+    RichTextEditor coverLetterEditor;
+
+    private async Task HandleSubmitClick()
+    {
+        clickStatus = "Clicked!";
+        command.ApplicationId = Application.Id;
+        command.Resume = await resumeEditor.GetHtmlAsync();
+        command.CoverLetter = await coverLetterEditor.GetHtmlAsync();
+
+        // TODO: trigger a waiting state?
+        if (OnSubmit.HasDelegate)
+        {
+            await OnSubmit.InvokeAsync(command);
+        }
+
+        modal.Hide();
+    }
+
+    public void Show()
+    {
+        modal.Show();
+    }
+
+    public void Hide()
+    {
+        modal.Hide();
+    }
+}

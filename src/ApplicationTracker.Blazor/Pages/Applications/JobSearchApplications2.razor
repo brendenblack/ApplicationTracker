@@ -1,0 +1,157 @@
+﻿@page "/search/{searchId:int}/applications/{applicationId:int}"
+
+@using ApplicationTracker.Blazor.Pages.Applications.Components
+@using ApplicationTracker.Core.Features.Applications.Queries.GetApplication
+@using ApplicationTracker.Core.Features.Applications.Queries.GetApplications
+@using System.Linq
+
+@inject MediatR.IMediator _mediator;
+@inject ApplicationTracker.Core.Persistence.IApplicationDbContext _context;
+@inject IJSRuntime js
+@inject NavigationManager _navigation;
+
+<div class="root">
+    <div class="sidebar bg-light border-top border-right">
+        @foreach (var app in _applications)
+        {
+            string classes = $"app-item border-bottom {((ApplicationId == app.Id) ? "bg-primary text-white" : "")}";
+            <div class="@classes" @onclick="@(() => HandleSelectApplication(app.Id))">
+                <p class="title m-0 font-weight-bold">@app.JobTitle</p>
+                <p class="organization">@app.OrganizationName</p>
+            </div>
+        }
+    </div>
+    <div class="content border-top">
+        @if (_selectedApplication != null)
+        {
+            <BSContainer IsFluid="true" Class="root">
+                <BSRow>
+                    <BSCol>
+                        <BSBreadcrumb>
+                            <BSBreadcrumbItem><a href="/">Searches</a></BSBreadcrumbItem>
+                            <BSBreadcrumbItem><a href="@($"/searches/{_selectedApplication.ParentSearchId}")">@_selectedApplication.ParentSearchTitle</a></BSBreadcrumbItem>
+                            <BSBreadcrumbItem IsActive="true">@_selectedApplication.JobTitle</BSBreadcrumbItem>
+                        </BSBreadcrumb>
+                    </BSCol>
+                    <BSCol>
+                    </BSCol>
+                </BSRow>
+                <BSRow>
+                    <BSCol SM="12" LG="8">
+                        <h1>@_selectedApplication.JobTitle</h1>
+
+                        <h2>Description</h2>
+                        <RichTextViewEdit Content="@_selectedApplication.JobDescription" />
+
+                        <h2>Activity</h2>
+                        <BSTabGroup>
+                            <BSTabList>
+                                <BSTab>
+                                    <BSTabLabel>Notes</BSTabLabel>
+                                    <BSTabContent>
+                                        @foreach (var note in _selectedApplication.Notes)
+                                        {
+                                            <ApplicationTracker.Blazor.Pages.Applications.Components.NoteCard Note="note" />
+                                        }
+                                    </BSTabContent>
+                                </BSTab>
+                                <BSTab>
+                                    <BSTabLabel>History</BSTabLabel>
+                                    <BSTabContent>
+                                        @foreach (var transition in _selectedApplication.Transitions)
+                                        {
+                                            <ApplicationTracker.Blazor.Pages.Applications.Components.TransitionCard Transition="transition" />
+                                        }
+                                    </BSTabContent>
+                                </BSTab>
+                            </BSTabList>
+                            <BSTabSelectedContent />
+                        </BSTabGroup>
+                    </BSCol>
+
+                    <BSCol SMOrder="first" MDOrder="last" SM="12" LG="4">
+                        <StackableField Title="Organization">@_selectedApplication.OrganizationName</StackableField>
+                        <StackableField Title="Location">
+                            <div @onclick="handleClickLocation">
+                                @(_selectedApplication.LocationCityName.Equals("remote", StringComparison.InvariantCultureIgnoreCase) ? "Remote" : $"{_selectedApplication.LocationCityName}, {_selectedApplication.LocationProvince}")
+                            </div>
+                        </StackableField>
+                        <StackableField Title="Created">@_selectedApplication.Created</StackableField>
+                        <StackableField Title="Last updated">@_selectedApplication.LastModified</StackableField>
+                    </BSCol>
+                </BSRow>
+            </BSContainer>
+        
+ 
+        
+        }
+        else
+        {
+            <p class="lead m-5">Select an application on the left.</p>
+        }
+
+      
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int SearchId { get; set; }
+
+    [Parameter]
+    public int ApplicationId { get; set; }
+
+    ApplicationDto _selectedApplication;
+
+    private async Task handleClickLocation()
+    {
+        _selectedApplication.LocationCityName = "Clickeroo";
+        StateHasChanged();
+    }
+
+    private int renderCounter = 0;
+    private int fetchCounter = 0;
+    private int applicationCounter = 0;
+
+    private List<ApplicationSummaryDto> _applications = new List<ApplicationSummaryDto>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        renderCounter++;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_applications.Count == 0)
+        {
+            fetchCounter++;
+            var apps = await _mediator.Send(new GetApplicationsQuery { ParentSearchId = SearchId });
+
+            _applications = (apps?.Applications ?? new List<ApplicationSummaryDto>())
+                .OrderByDescending(a => a.Created)
+                .ToList();
+        }
+
+        if (_selectedApplication == null || _selectedApplication.Id != ApplicationId)
+        {
+            _selectedApplication = await _mediator.Send(new GetApplicationQuery { Id = ApplicationId });
+            applicationCounter++;
+        }
+
+        await base.OnParametersSetAsync();
+    }
+
+
+    private void HandleSelectApplication(int applicationId)
+    {
+        ApplicationId = applicationId;
+        applicationCounter++;
+        _navigation.NavigateTo($"/search/{SearchId}/applications/{ApplicationId}");
+    }
+
+    private async Task HandleSelectedApplicationUpdate()
+    {
+        _selectedApplication = await _mediator.Send(new GetApplicationQuery { Id = ApplicationId });
+        StateHasChanged();
+    }
+}

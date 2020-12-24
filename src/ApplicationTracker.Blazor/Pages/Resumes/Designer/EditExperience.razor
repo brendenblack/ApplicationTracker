@@ -1,0 +1,14 @@
+﻿@page "/resume/design/experience";
+@page "/resume/design/experience/{id:int}";
+
+<h3>EditExperience</h3>
+
+@code {
+    [Parameter]
+    public int Id { get; set; } = 0;
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            await base.OnAfterRenderAsync(firstRender);
+        }
+}

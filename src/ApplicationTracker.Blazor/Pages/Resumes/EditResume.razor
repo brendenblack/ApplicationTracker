@@ -1,0 +1,161 @@
+﻿@page "/resumes/edit"
+@page "/resumes/edit/{id:int}"
+
+@using Blazored.TextEditor;
+
+@inject NavigationManager NavigationManager
+@inject MediatR.IMediator mediator
+<BSContainer>
+
+    @if (Id == 0)
+    {
+        <h3>Create a new resumé</h3>
+    }
+    else
+    {
+        <h3>Edit a resumé</h3>
+    }
+    <EditForm Model="@_createModel" OnValidSubmit="HandleSave">
+        <DataAnnotationsValidator />
+
+        <BSFormGroup>
+            <BSLabel for="title">Title</BSLabel>
+            <BSInput InputType="InputType.Text" id="organizationName" @bind-Value="_createModel.Title" />
+            <small id="titleHelp" class="form-text text-muted">A label to identify this resumé version.</small>
+            <BSFormFeedback For="@(() => _createModel.Title)" />
+        </BSFormGroup>
+
+        @*<BSFormGroup>
+                <BSLabel for="content">Content</BSLabel>
+                <BSInput InputType="InputType.TextArea" rows="16" id="organizationName" @bind-Value="_createModel.Content" />
+                <BSFormFeedback For="@(() => _createModel.Content)" />
+            </BSFormGroup>*@
+
+        <BSFormGroup>
+            <BSLabel for="content">Content</BSLabel>
+            <BlazoredTextEditor @ref="@QuillHtml">
+                <ToolbarContent>
+                    <!-- Add font size dropdown -->
+                    <select class="ql-font">
+                        <option value="roboto">Roboto</option>
+                        <option value="montserrat">Montserrat</option>
+                        <option value="tangerine">Tangerine</option>
+                    </select>
+                    <select class="ql-size">
+                        <option value="small"></option>
+                        <!-- Note a missing, thus falsy value, is used to reset to default -->
+                        <option selected></option>
+                        <option value="large"></option>
+                        <option value="huge"></option>
+                    </select>
+                    <select class="ql-header">
+                        <option selected=""></option>
+                        <option value="1"></option>
+                        <option value="2"></option>
+                        <option value="3"></option>
+                        <option value="4"></option>
+                        <option value="5"></option>
+                    </select>
+                    <span class="ql-formats">
+                        <button class="ql-bold"></button>
+                        <button class="ql-italic"></button>
+                        <button class="ql-underline"></button>
+                        <button class="ql-strike"></button>
+                    </span>
+                    <span class="ql-formats">
+                        <select class="ql-color"></select>
+                        <select class="ql-background"></select>
+                    </span>
+                    <span class="ql-formats">
+                        <button class="ql-list" value="ordered"></button>
+                        <button class="ql-list" value="bullet"></button>
+                    </span>
+                    <span class="ql-formats">
+                        <button class="ql-link"></button>
+                    </span>
+                </ToolbarContent>
+                <EditorContent>
+                    @((MarkupString)_createModel.Content)
+                </EditorContent>
+            </BlazoredTextEditor>
+        </BSFormGroup>
+
+
+        <BSButton ButtonType="ButtonType.Submit">Save</BSButton>
+    </EditForm>
+
+        
+</BSContainer>
+        @code {
+            [Parameter]
+            public int Id { get; set; } = 0;
+
+            public class UpsertResumeCommand
+            {
+                public string Title { get; set; }
+
+                public string Content { get; set; }
+            }
+
+            private UpsertResumeCommand _createModel = new UpsertResumeCommand();
+
+            protected override async Task OnAfterRenderAsync(bool firstRender)
+            {
+                if (firstRender)
+                {
+
+                    if (this.Id > 0)
+                    {
+                        await Update(this.Id);
+                        StateHasChanged();
+                    }
+                }
+
+                await base.OnAfterRenderAsync(firstRender);
+            }
+
+            private async Task Update(int id)
+            {
+                //var dto = await mediator.Send(new GetResumeQuery { Id = id });
+                //_createModel = new UpsertResumeCommand
+                //{
+                //    Id = dto.Id,
+                //    Title = dto.Title,
+                //    Content = dto.Contents,
+                //};
+                //await this.QuillHtml.LoadHTMLContent(dto.Contents);
+                //StateHasChanged();
+            }
+
+            private async Task HandleSave()
+            {
+                _createModel.Content = await this.QuillHtml.GetHTML();
+                var createdId = await mediator.Send(_createModel);
+                NavigationManager.NavigateTo($"/resumes/edit/{createdId}");
+                //await Update(createdId);
+
+            }
+
+            private void HandleToastDismiss()
+            {
+
+            }
+
+            BlazoredTextEditor QuillHtml;
+
+            //public async void GetHTML()
+            //{
+            //    QuillHTMLContent = await this.QuillHtml.GetHTML();
+            //    StateHasChanged();
+            //}
+
+            //public async void SetHTML()
+            //{
+            //    string QuillContent =
+            //        @"<a href='http://BlazorHelpWebsite.com/'>" +
+            //        "<img src='images/BlazorHelpWebsite.gif' /></a>";
+
+            //    await this.QuillHtml.LoadHTMLContent(QuillContent);
+            //    StateHasChanged();
+            //}
+        }

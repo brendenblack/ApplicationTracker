@@ -1,0 +1,56 @@
+﻿@using ApplicationTracker.Blazor.Pages.Applications.Components
+@using ApplicationTracker.Core.Domain;
+@using ApplicationTracker.Core.Features.Applications.Queries.GetApplication;
+
+
+@if (Status != null)
+{
+    <BSButton Color="@_defaultColour" Size="Size.Small" OnClick="@(() => OnClick.InvokeAsync(ApplicationActions.ADD_NOTE))"><span class="oi oi-comment-square"></span> Note</BSButton>
+
+    <BSButtonGroup Size="Size.Small">
+        @if (Status == ApplicationStatuses.INPROGRESS)
+        {
+
+        }
+        else if (Application.CurrentStatus == Core.Domain.ApplicationStatuses.SUBMITTED)
+        {
+            <BSButton Color="@_defaultColour" OnClick="@(() => OnClick.InvokeAsync(ApplicationActions.EMPLOYER_CONTACT))"><span class="oi oi-envelope-closed"></span> Employer contact</BSButton>
+            <BSButton Color="@_defaultColour" OnClick="@(() => OnClick.InvokeAsync(ApplicationActions.INTERVIEW))">Schedule interview</BSButton>
+            <BSButton Color="@_defaultColour"></BSButton>
+        }
+        else if (Application.CurrentStatus == Core.Domain.ApplicationStatuses.CLOSED)
+        {
+            <BSButton IsDisabled="true">Re-open</BSButton>
+        }
+    </BSButtonGroup>
+}
+
+
+
+@code {
+    [Parameter]
+    public ApplicationDto Application { get; set; }
+
+    [Parameter]
+    public ApplicationStatuses? Status { get; set; }
+
+    private Color _defaultColour = Color.Light;
+
+    [Parameter]
+    public EventCallback<ApplicationActions> OnClick { get; set; }
+
+    private async Task handleClick()
+    {
+
+    }
+
+    [Parameter]
+    public EventCallback<TransitionAction> OnTransitionClick { get; set; }
+
+    public enum ApplicationActions
+    {
+        ADD_NOTE,
+        EMPLOYER_CONTACT,
+        INTERVIEW
+    }
+}

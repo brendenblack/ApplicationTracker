@@ -1,0 +1,41 @@
+﻿<div class="section">
+    <div class="header">
+        <BSButton Color="Color.Link" OnClick="handleClick"><i class="oi @caret"></i> @Title</BSButton>
+    </div>
+    <BSCollapse IsOpen="_isOpen">
+        <div class="content">
+           @ChildContent
+        </div>
+    </BSCollapse>
+</div>
+
+
+@code {
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    string caret => (IsOpen) ? "oi-caret-bottom" : "oi-caret-right";
+
+    [Parameter]
+    public bool IsOpen { get; set; } = true;
+
+    private bool? _isOpen;
+
+    void handleClick(MouseEventArgs e)
+    {
+        _isOpen = !_isOpen;
+        StateHasChanged();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!_isOpen.HasValue)
+        {
+            _isOpen = IsOpen;
+        }
+        base.OnParametersSet();
+    }
+}

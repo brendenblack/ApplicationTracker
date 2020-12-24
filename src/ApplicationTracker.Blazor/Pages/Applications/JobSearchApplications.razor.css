@@ -1,0 +1,34 @@
+﻿.root {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+}
+
+.sidebar {
+    width: 300px;
+}
+
+.content {
+    flex-grow: 1;
+    padding: 1em;
+}
+
+.app-item {
+    cursor: pointer;
+    padding: 0.5em;
+}
+
+.app-item .title {
+    font-size: 1.2em;
+}
+
+.app-item .organization {
+    font-size: 0.8em;
+}
+
+.app-item:hover {
+}
+
+.app-item.selected {
+    /*background-color: lightgrey;*/
+}

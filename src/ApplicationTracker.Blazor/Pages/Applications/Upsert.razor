@@ -1,0 +1,243 @@
+﻿@page "/applications/edit/{applicationId:int}"
+
+@using ApplicationTracker.Core.Features.Applications.Commands.UpsertApplication
+@using ApplicationTracker.Core.Features.Applications.Queries.GetApplication
+@using ApplicationTracker.Core.Features.Organizations.Queries.GetOrganizationNames
+@using Blazored.TextEditor;
+@using System.ComponentModel.DataAnnotations
+
+@inject MediatR.IMediator _mediator;
+@inject NavigationManager NavigationManager;
+
+<BSContainer IsFluid="true">
+    <BlazorStrap.BSModal @ref="importUrlModal">
+        <BlazorStrap.BSModalHeader @onclick="@(() => importUrlModal.Hide())">Import from URL</BlazorStrap.BSModalHeader>
+        <BlazorStrap.BSModalBody>
+            <BSBasicInput InputType="InputType.Text" @bind-Value="_url" />
+        </BlazorStrap.BSModalBody>
+        <BSModalFooter>
+            <BSButton Color="Color.Secondary" @onclick="@(() => importUrlModal.Hide())">Close</BSButton>
+            <BSButton Color="Color.Primary" @onclick="@HandleImport">Import</BSButton>
+        </BSModalFooter>
+    </BlazorStrap.BSModal>
+
+    <BSAlert Color="Color.Success" IsDismissible="true" IsOpen="isCreationAlertOpen">Application successfully created.</BSAlert>
+
+    <EditForm Model="@_createModel" OnValidSubmit="HandleCreate">
+        <DataAnnotationsValidator />
+        <BSRow>
+            <BSCol LG="12" XL="8">
+                <div class="row">
+                    <div class="col">
+                        <h4>Position description</h4>
+                    </div>
+                    <div class="col-sm-auto">
+                        @*<BSButton Color="Color.Link" @onclick="@(() => importUrlModal.Show())">Import from URL</BSButton>*@
+                    </div>
+                </div>
+
+                <BSFormGroup>
+                    <BSLabel for="organizationName">Organization name</BSLabel>
+                    <BlazoredTypeahead SearchMethod="SearchOrganizations" @bind-Value="_createModel.OrganizationName" id="organizationName">
+                        <SelectedTemplate Context="entry">
+                            @entry
+                        </SelectedTemplate>
+                        <ResultTemplate Context="entry">
+                            @entry
+                        </ResultTemplate>
+                    </BlazoredTypeahead>
+                    <BSFormFeedback For="@(() => _createModel.OrganizationName)" />
+                </BSFormGroup>
+
+                <BSFormGroup>
+                    <BSLabel for="positionTitle">Position title</BSLabel>
+                    <BSInput InputType="InputType.Text" id="positionTitle" @bind-Value="_createModel.JobTitle" />
+                    <BSFormFeedback For="@(() => _createModel.JobTitle)" />
+                </BSFormGroup>
+
+                <BSFormGroup>
+                    <BSLabel for="content">Position description</BSLabel>
+                    <BlazoredTextEditor @ref="@QuillHtml">
+                        <ToolbarContent>
+                            <!-- Add font size dropdown -->
+                            <select class="ql-font">
+                                <option value="roboto">Roboto</option>
+                                <option value="montserrat">Montserrat</option>
+                                <option value="tangerine">Tangerine</option>
+                            </select>
+                            <select class="ql-size">
+                                <option value="small"></option>
+                                <!-- Note a missing, thus falsy value, is used to reset to default -->
+                                <option selected></option>
+                                <option value="large"></option>
+                                <option value="huge"></option>
+                            </select>
+                            <select class="ql-header">
+                                <option selected=""></option>
+                                <option value="1"></option>
+                                <option value="2"></option>
+                                <option value="3"></option>
+                                <option value="4"></option>
+                                <option value="5"></option>
+                            </select>
+                            <span class="ql-formats">
+                                <button class="ql-bold"></button>
+                                <button class="ql-italic"></button>
+                                <button class="ql-underline"></button>
+                                <button class="ql-strike"></button>
+                            </span>
+                            <span class="ql-formats">
+                                <select class="ql-color"></select>
+                                <select class="ql-background"></select>
+                            </span>
+                            <span class="ql-formats">
+                                <button class="ql-list" value="ordered"></button>
+                                <button class="ql-list" value="bullet"></button>
+                            </span>
+                            <span class="ql-formats">
+                                <button class="ql-link"></button>
+                            </span>
+                        </ToolbarContent>
+                        <EditorContent>
+                            @((MarkupString)_createModel.Description)
+                        </EditorContent>
+                    </BlazoredTextEditor>
+                </BSFormGroup>
+            </BSCol>
+
+            <BSCol LG="12" XL="4">
+                <h4>Application details</h4>
+                <BSFormGroup>
+                    <BSLabel for="appliedOn">Application date</BSLabel>
+                    <InputDate id="appliedOn" @bind-Value="_createModel.AppliedOn" class="form-control" />
+                </BSFormGroup>
+
+                <BSFormGroup>
+                    <BSLabel for="resumeSelect">Resum&eacute;</BSLabel>
+                    <BSBasicInput Id="resumeSelect" InputType="InputType.Select" Value="string.Empty">
+                        <option value="-1">None</option>
+                        @*@foreach (var resume in _resumes)
+                        {
+                            <option value="@resume.Id">@resume.Title (@((resume.LastModified.HasValue) ? resume.LastModified.Value.ToShortDateString() : resume.Created.ToShortDateString()))</option>
+                        }*@
+                    </BSBasicInput>
+                </BSFormGroup>
+
+                <BSFormGroup>
+                    <BSLabel for="source">Source</BSLabel>
+                    <BSInput Id="source" InputType="InputType.Text" @bind-Value="_createModel.Source" />
+                    <small class="form-text text-muted">Where you heard about this opportunity.</small>
+                </BSFormGroup>
+            </BSCol>
+        </BSRow>
+
+
+        @*<ValidationSummary />*@
+        
+
+
+        <BSButton Color="Color.Primary" ButtonType="ButtonType.Submit">Save</BSButton>
+    </EditForm>
+</BSContainer>
+
+@code {
+
+    BSModal importUrlModal;
+    BlazoredTextEditor QuillHtml;
+    //List<ResumeSummaryDto> _resumes = new List<ResumeSummaryDto>();
+    List<string> _organizationNames = new List<string>();
+    UpsertApplicationCommand _createModel = new UpsertApplicationCommand()
+    {
+        AppliedOn = DateTime.Now
+    };
+
+    [DataType(DataType.Url)]
+    private string _url;
+
+    [Parameter]
+    public int ApplicationId { get; set; }
+
+    private bool isCreationAlertOpen = false;
+
+
+    public void HandleImport()
+    {
+
+    }
+
+    public async Task HandleCreate()
+    {
+        // massage some input values
+        _createModel.Description = await this.QuillHtml.GetHTML();
+        //if (_createModel.ResumeId == -1)
+        //{
+        //    _createModel.ResumeId = null;
+        //}
+
+        var createdId = await _mediator.Send(_createModel);
+        NavigationManager.NavigateTo($"/applications/edit/{createdId}");
+
+        await Update(createdId);
+    }
+
+    private async Task<IEnumerable<string>> SearchOrganizations(string searchText)
+    {
+        if (_organizationNames.Count <= 0)
+        {
+            IEnumerable<string> empty = new List<string> { searchText };
+            return empty;
+        }
+
+        var results = _organizationNames.Where(o => o.ToLower()
+            .Contains(searchText.ToLower()))
+            .Append(searchText)
+            .ToHashSet();
+
+        return await Task.FromResult(results);
+    }
+
+    private async Task Update(int applicationId)
+    {
+        var dto = await _mediator.Send(new GetApplicationQuery { Id = applicationId });
+
+        if (dto == null)
+        {
+            // TODO
+            return;
+        }
+
+        _createModel = new UpsertApplicationCommand
+        {
+            Id = dto.Id,
+            Description = dto.JobDescription,
+            AppliedOn = dto.SubmittedOn,
+            JobTitle = dto.JobTitle,
+            OrganizationName = dto.OrganizationName,
+        };
+
+        //await this.QuillHtml.LoadHTMLContent(dto.Description);
+
+        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // fetch data useful to help the user with creation
+            //var resumeVm = await _mediator.Send(new GetResumesQuery());
+            //_resumes = resumeVm.Resumes;
+            var names = await _mediator.Send(new GetOrganizationNamesQuery());
+            _organizationNames = names.Names;
+
+            StateHasChanged();
+
+            if (ApplicationId > 0)
+            {
+                await Update(ApplicationId);
+            }
+
+
+        }
+    }
+}

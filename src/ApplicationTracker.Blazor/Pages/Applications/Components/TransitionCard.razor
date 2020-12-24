@@ -1,0 +1,18 @@
+﻿@using ApplicationTracker.Core.Features.Applications.Queries.GetApplication
+
+<div class="transition px-2 py-1 mb-1">
+    <span class="text-muted"><small>@Transition.Timestamp</small></span>
+    <p class="text-muted m-0">
+        <em>
+            @($"{Transition.TransitionFrom} to {Transition.TransitionTo}")
+            @if (Transition.Resolution != Core.Domain.ApplicationResolution.UNRESOLVED)
+            {
+                @($" ({Transition.Resolution.ToString().ToLower()})")
+            }
+        </em>
+    </p>
+</div>
+@code {
+    [Parameter]
+    public StatusTransitionDto Transition { get; set; }
+}

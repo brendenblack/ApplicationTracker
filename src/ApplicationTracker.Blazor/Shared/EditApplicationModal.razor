@@ -1,0 +1,49 @@
+﻿@typeparam T
+<h3>EditApplicationModal</h3>
+
+<BSModal @ref="Modal">
+    <BSModalHeader OnClick="@(() => Modal.Hide())">Hello world</BSModalHeader>
+    <BSModalBody>
+        @ChildContent
+    </BSModalBody>
+    <BSModalFooter>
+        <BSButton Color="Color.Secondary" @onclick="@(() => Modal.Hide())">Cancel</BSButton>
+        <BSButton Color="Color.Primary" @onclick="HandleSave" IsActive="!isLoading">@(isLoading) ? "Save" : <i class="oi oi-clock"></i></BSButton>
+    </BSModalFooter>
+</BSModal>
+
+@code {
+    [Parameter]
+    public EventCallback<T> OnSubmit { get; set; }
+
+    [Parameter]
+    public T Model { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    private bool isLoading = false;
+
+    public BSModal Modal { get; private set; }
+
+
+    private async Task HandleSave()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        if (OnSubmit.HasDelegate)
+        {
+            await OnSubmit.InvokeAsync(Model);
+        }
+
+        isLoading = false;
+        Modal.Hide();
+    }
+
+    public class EditApplicationModel
+    {
+
+    }
+
+}

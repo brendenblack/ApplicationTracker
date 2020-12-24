@@ -1,0 +1,18 @@
+﻿
+.description-read {
+    position: relative;
+}
+
+.description-read button {
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.description-read:hover button {
+    display: block;
+}
+
+.controls { 
+
+}
